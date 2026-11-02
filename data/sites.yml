@@ -1,0 +1,54 @@
+
+# Konventionen (werden automatisch abgeleitet):
+#   backbone  Verbindung core1 <-> Filiale: core1 = .1, Filiale = .2
+#   lan       Filial-LAN: Router = vorletzte Adresse (z. B. .254), Hosts frei waehlbar
+#   Die zwei letzten Adressen vor dem Broadcast sind reserviert (Router und Docker-Bridge).
+#   Der Netzwerkdesigner pflegt nur diese Datei.
+core: 
+  name: core1
+  router_id: 10.255.0.1
+
+sla_classes:
+  gold:
+    max_latency_ms: 30
+    availability_percent: 99.9
+  silber:
+    max_latency_ms: 60
+    availability_percent: 99.5
+
+sites:
+  - id: 1
+    name: br01
+    router_id: 10.255.0.2
+    sla: gold 
+    backbone: 10.0.1.0/24
+    lan: 10.10.1.0/24
+    hosts:
+      - {name: pc01, ip: 10.10.1.10, role: client}
+
+  - id: 2
+    name: br02
+    router_id: 10.255.0.3
+    sla: silber
+    backbone: 10.0.2.0/24
+    lan: 10.10.2.0/24
+    hosts:
+      - []
+
+  - id: 3
+    name: br03
+    router_id: 10.255.0.4
+    sla: silber
+    backbone: 10.0.3.0/24
+    lan: 10.10.3.0/24
+    hosts:
+      - []
+
+  - id: 4
+    name: br04
+    router_id: 10.255.0.5
+    sla: gold 
+    backbone: 10.0.4.0/24
+    lan: 10.10.4.0/24
+    hosts:
+      - {name: srv01, ip: 10.10.4.10, role: server}
