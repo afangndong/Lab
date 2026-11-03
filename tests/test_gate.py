@@ -1,4 +1,4 @@
-from gate import check_change
+from gate import check_change, main
 from tickets import FakeClient
 
 
@@ -23,3 +23,8 @@ def test_invalid_data_blocks(data):
     c = FakeClient({"CHG1": {"short_description": "x", "state": "scheduled"}})
     assert check_change("CHG1", c, data) == 1
     assert "Validierung fehlgeschlagen" in c.notes["CHG1"][-1]
+
+
+
+def test_main_needs_one_argument():
+    assert main([]) == 2

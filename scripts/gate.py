@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """Tor vor dem Rollout: Ticket prüfen, Daten validieren, Ergebnis ins Ticket."""
-from tickets import TicketClient
+import os
+import sys
+
+import netmodel
+from tickets import TicketClient, ServiceNowClient
 from validate import validate
+
+
 
 APPROVED_STATE = "scheduled"
 
@@ -24,3 +30,19 @@ def check_change(number, client: TicketClient, data):
 
     client.add_note(number, "Pipeline: Validierung ok")
     return 0
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if len(argv) != 1:
+        print("Aufruf: python scripts/gate.py CHG-Nummer")
+        return 2
+
+    url = os.environ.get("SERVICENOW_URL", "http://localhost:8081")
+    client = ServiceNowClient(url)   #  ServiceNowClient mit der url anlegen
+    data = netmodel.load()     # Daten mit netmodel.load() laden
+    return check_change(argv[0], client, data)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
