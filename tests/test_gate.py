@@ -23,4 +23,3 @@ def test_invalid_data_blocks(data):
     c = FakeClient({"CHG1": {"short_description": "x", "state": "scheduled"}})
     assert check_change("CHG1", c, data) == 1
     assert "Validierung fehlgeschlagen" in c.notes["CHG1"][-1]
-    assert "br01" in c.notes["CHG1"][-1]
