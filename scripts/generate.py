@@ -146,5 +146,37 @@ def main(argv=None):
     return 0
 
 
+def stale_files(data, root=netmodel.ROOT):
+    """Gibt die Dateien zurück, die nicht zu den Daten passen."""
+    files = render_all(data, root)
+    return [p for p, text in files.items()
+            if not p.exists() or p.read_text(encoding="utf-8") != text]
+
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("--check", action="store_true", help="nur pruefen, nichts schreiben")
+    parser.add_argument("--data", default=None, help="Pfad zu sites.yml (Standard: data/sites.yml)")
+    args = parser.parse_args(argv)
+
+    data = netmodel.load(args.data) if args.data else netmodel.load()
+
+    if args.check:
+        stale = stale_files(data)
+        if stale:
+            for path in stale:
+                print(f"VERALTET: {path.relative_to(netmodel.ROOT)} passt nicht zu data/sites.yml (make gen)")
+            return 1
+        print("Generierte Dateien sind aktuell")
+        return 0
+
+    for path, text in render_all(data).items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        print(f"geschrieben: {path.relative_to(netmodel.ROOT)}")
+    return 0
+
+
 if __name__ == "__main__":
     sys.exit(main())
