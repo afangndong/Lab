@@ -6,13 +6,14 @@ import sys
 import netmodel
 from tickets import TicketClient, ServiceNowClient
 from validate import validate
+from generate import stale_files
 
 
 
 APPROVED_STATE = "scheduled"
 
 
-def check_change(number, client: TicketClient, data):
+def check_change(number, client: TicketClient, data, root=netmodel.ROOT):
     try:
         change = client.get_change(number)
     except KeyError:
@@ -27,6 +28,12 @@ def check_change(number, client: TicketClient, data):
     if fehler:
         client.add_note(number, "Pipeline: Validierung fehlgeschlagen: " + "; ".join(fehler))
         return 1
+
+    veraltet = stale_files(data, root)
+    if veraltet:
+        client.add_note(number, "Pipeline: generierte Dateien veraltet: "
+                        + ", ".join(p.name for p in veraltet))
+        return 1    
 
     client.add_note(number, "Pipeline: Validierung ok")
     return 0

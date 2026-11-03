@@ -1,5 +1,6 @@
 from gate import check_change, main
 from tickets import FakeClient
+import generate
 
 
 def test_blocks_wrong_state(data):
@@ -28,3 +29,22 @@ def test_invalid_data_blocks(data):
 
 def test_main_needs_one_argument():
     assert main([]) == 2
+
+
+def _write_generated(data, root):
+    for p, t in generate.render_all(data, root=root).items():
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(t, encoding="utf-8")
+
+
+def test_ok(data, tmp_path):
+    _write_generated(data, tmp_path)
+    c = FakeClient({"CHG1": {"short_description": "x", "state": "scheduled"}})
+    assert check_change("CHG1", c, data, root=tmp_path) == 0
+    assert c.notes["CHG1"][-1].startswith("Pipeline")
+
+
+def test_stale_blocks(data, tmp_path):
+    c = FakeClient({"CHG1": {"short_description": "x", "state": "scheduled"}})
+    assert check_change("CHG1", c, data, root=tmp_path) == 1   # dort wurde nichts geschrieben
+    assert "veraltet" in c.notes["CHG1"][-1]
