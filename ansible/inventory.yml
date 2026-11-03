@@ -1,0 +1,75 @@
+# GENERIERT aus data/sites.yml durch scripts/generate.py. Nicht von Hand aendern.
+---
+all:
+  vars:
+    ansible_connection: local
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'
+  children:
+    routers:
+      hosts:
+        core1:
+          container: lab-core1
+          router_id: 10.255.0.1
+          ospf_networks:
+            - 10.0.1.0/24
+            - 10.0.2.0/24
+            - 10.0.3.0/24
+            - 10.0.4.0/24
+        br01:
+          container: lab-br01
+          router_id: 10.255.0.2
+          ospf_networks:
+            - 10.0.1.0/24
+            - 10.10.1.0/24
+        br02:
+          container: lab-br02
+          router_id: 10.255.0.3
+          ospf_networks:
+            - 10.0.2.0/24
+            - 10.10.2.0/24
+        br03:
+          container: lab-br03
+          router_id: 10.255.0.4
+          ospf_networks:
+            - 10.0.3.0/24
+            - 10.10.3.0/24
+        br04:
+          container: lab-br04
+          router_id: 10.255.0.5
+          ospf_networks:
+            - 10.0.4.0/24
+            - 10.10.4.0/24
+    clients:
+      hosts:
+        pc01:
+          container: lab-pc01
+          host_ip: 10.10.1.10
+          lan_gateway: 10.10.1.254
+          site: br01
+        pc02:
+          container: lab-pc02
+          host_ip: 10.10.1.11
+          lan_gateway: 10.10.1.254
+          site: br01
+        pc03:
+          container: lab-pc03
+          host_ip: 10.10.2.10
+          lan_gateway: 10.10.2.254
+          site: br02
+    servers:
+      hosts:
+        srv-lager:
+          container: lab-srv-lager
+          host_ip: 10.10.3.20
+          lan_gateway: 10.10.3.254
+          site: br03
+        srv01:
+          container: lab-srv01
+          host_ip: 10.10.4.10
+          lan_gateway: 10.10.4.254
+          site: br04
+        srv02:
+          container: lab-srv02
+          host_ip: 10.10.4.11
+          lan_gateway: 10.10.4.254
+          site: br04
