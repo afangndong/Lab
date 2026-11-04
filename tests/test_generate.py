@@ -1,5 +1,6 @@
 from pathlib import Path
 import generate
+import yaml
 
 def test_render_all_paths(data, tmp_path):
     files = generate.render_all(data, root=tmp_path)
@@ -30,3 +31,11 @@ def test_stale_detection(data, tmp_path):
     first.write_text("manipuliert", encoding="utf-8")
     stale = [p for p, t in files.items() if p.read_text(encoding="utf-8") != t]
     assert stale == [first]
+
+
+def test_router_have_file_limit(data, tmp_path):
+    text = next(t for p, t in generate.render_all(data, root=tmp_path).items()
+                if p.name == "docker-compose.yml")
+    compose = yaml.safe_load(text)
+    for name in ("core1", "br01", "br04"):
+        assert compose["services"][name]["ulimits"]["nofile"]["soft"] <= 65536

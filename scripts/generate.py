@@ -44,6 +44,7 @@ def render_compose(lab):
             "hostname": router["name"],
             "privileged": True,
             "sysctls": {"net.ipv4.ip_forward": "1"},
+            "ulimits": {"nofile": {"soft": 1024, "hard": 65536}}, 
             "volumes": ["./docker/frr/daemons:/etc/frr/daemons:ro"],
             "networks": {a["network"]: {"ipv4_address": a["ip"]} for a in router["attachments"]},
         }
