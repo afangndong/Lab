@@ -24,6 +24,7 @@ def test_br01_config():
     assert "ospf router-id 10.255.0.2" in text
     assert " network 10.0.1.0/24 area 0" in text
     assert " network 10.10.1.0/24 area 0" in text
+    assert "frr defaults traditional" in text
 
 
 def test_core1_has_all_backbones():
