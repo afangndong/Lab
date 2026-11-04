@@ -1,0 +1,9 @@
+frr defaukts traditional
+hostname {{ inventory_hostname }}
+service integrated-vtysh-config
+!
+router ospf
+ ospf router-id {{ router_id }}
+{# TODO: für jedes Netz in ospf_networks eine Zeile " network <netz> area 0"
+#}
+!

@@ -4,3 +4,5 @@ fastapi
 uvicorn
 httpx
 pytest
+ansible-core
+jinja2
