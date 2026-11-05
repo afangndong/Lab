@@ -4,7 +4,7 @@ import os
 import sys
 
 import netmodel
-from tickets import TicketClient, ServiceNowClient
+from tickets import TicketClient, client_from_env
 from validate import validate
 from generate import stale_files
 
@@ -45,8 +45,8 @@ def main(argv=None):
         print("Aufruf: python scripts/gate.py CHG-Nummer")
         return 2
 
-    url = os.environ.get("SERVICENOW_URL", "http://localhost:8081")
-    client = ServiceNowClient(url)   #  ServiceNowClient mit der url anlegen
+    #url = os.environ.get("SERVICENOW_URL", "http://localhost:8081")
+    client = client_from_env()   #  ServiceNowClient mit der url anlegen
     data = netmodel.load()     # Daten mit netmodel.load() laden
     return check_change(argv[0], client, data)
 

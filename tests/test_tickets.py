@@ -1,5 +1,5 @@
 import pytest
-from tickets import FakeClient
+from tickets import FakeClient, ServiceNowClient, client_from_env
 
 
 def test_get_change():
@@ -23,3 +23,10 @@ def test_set_state():
 def test_unknown_change_raises():
     with pytest.raises(KeyError):
         FakeClient({}).get_change("CHG9")
+
+
+def test_client_from_env(monkeypatch):
+    monkeypatch.setenv("SERVICENOW_URL", "http://example:1234")
+    c = client_from_env()
+    assert isinstance(c, ServiceNowClient)
+    assert c.base_url == "http://example:1234"

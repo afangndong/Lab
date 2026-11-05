@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 import requests
+import os
 
 TABLE = "/api/now/table/change_request"
 
@@ -82,3 +83,8 @@ class ServiceNowClient(TicketClient):
             json={"state": state},
         )
         r.raise_for_status()
+
+
+def client_from_env():
+    """Baut den Ticket-Client aus der Umgebung (SERVICENOW_URL)."""
+    return ServiceNowClient(os.environ.get("SERVICENOW_URL", "http://localhost:8081"))
