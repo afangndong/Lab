@@ -3,6 +3,7 @@ hostname {{ inventory_hostname }}
 service integrated-vtysh-config
 !
 router ospf
+ log-adjacency-changes
  ospf router-id {{ router_id }}
 {% for net in ospf_networks %}
  network {{ net }} area 0
