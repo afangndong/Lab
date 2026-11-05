@@ -29,5 +29,29 @@ pipeline {
                 '''
             }
         }
+
+        stage('Plan'){
+            steps {
+                sh '''
+                    . .venv/bin/activate
+                    ansible-playbook -i ansible/inventory.yml ansible.yml --check --diff
+                '''
+            }
+        }
+
+        stage('Freigabe'){
+            steps {
+                input message: "Plan geprüft? Rollout für ${params.CHANGE_NO} starten?", ok: 'Deploy'
+            }
+        }
+
+        stage('Rollout'){
+            steps {
+                sh '''
+                    . .venv/bin/activate
+                    ansible-playbook -i ansible/inventory.yml ansible/site.yml
+                '''
+            }
+        }
     }
 }
