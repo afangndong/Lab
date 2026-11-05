@@ -53,5 +53,30 @@ pipeline {
                 '''
             }
         }
+
+        stage ('Abschluss'){
+            steps {
+                sh '''
+                    . .venv/bin/activate
+                    python scripts/ticket_cli.py note "$CHANGE_NO "Pipeline: ausgerollt (Build $BUILD_NUMBER, $BUILD_URL)"
+                    python scripts/ticket_cli.py state "$CHANGE_NO" closed
+                '''
+            }
+        }
+    }
+
+    post {
+        failure {
+            sh '''
+                . .venv/bin/activate
+                python scripts/ticket_cli.py note "$CHANGE_NO" "Pipeline: fehlgeschlagen (Build $BUILD_NUMBER, $BUILD_URL)" || true
+            '''
+        }
+        aborted {
+            sh '''
+                . .venv/bin/activate
+                python scripts/ticket_cli.py note "$CHANGE_NO" "Pipeline: abgebrochen, nicht freigegeben (Build $BUILD_NUMBER)" || true
+            '''
+        }
     }
 }
