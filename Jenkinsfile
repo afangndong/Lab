@@ -34,7 +34,7 @@ pipeline {
             steps {
                 sh '''
                     . .venv/bin/activate
-                    ansible-playbook -i ansible/inventory.yml ansible.yml --check --diff
+                    ansible-playbook -i ansible/inventory.yml ansible/site.yml --check --diff
                 '''
             }
         }
