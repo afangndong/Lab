@@ -24,7 +24,7 @@ pipeline {
         stage('Tor'){
             steps {
                 sh '''
-                    . . venv/bin/activate
+                    . .venv/bin/activate
                     python scripts/gate.py "$CHANGE_NO"
                 '''
             }
