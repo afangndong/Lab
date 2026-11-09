@@ -12,11 +12,16 @@ pipeline {
     agent any
 
     parameters {
-        string(name: 'CHANGE_NO', defaultValue: 'CHG0030413', description: 'Ticketnummer')
+        string(name: 'CHANGE_NO', defaultValue: 'CHG0030413', description: 'Ticketnummer (ServiceNow-Mock: CHG..., Redmine: Ticket-ID, z. B. 1)')
+        choice(name: 'TICKETSYSTEM', choices: ['servicenow', 'redmine'], description: 'Welches Ticketsystem?')
+        choice(name: 'FREIGABE', choices: ['Ticket', 'Jenkins-Knopf'], description: 'Wo wird der Rollout freigegeben?')
     }
 
     environment {
+        TICKET_SYSTEM = "${params.TICKETSYSTEM}"
         SERVICENOW_URL = 'http://host.docker.internal:8081'
+        REDMINE_URL = 'http://redmine:3000'
+        REDMINE_API_KEY = credentials('redmine-api-key')
         BACKUP_ROOT = '/backups'
     }
 
@@ -52,7 +57,18 @@ pipeline {
 
         stage('Freigabe'){
             steps {
-                input message: "Plan geprüft? Rollout für ${params.CHANGE_NO} starten?", ok: 'Deploy'
+                script {
+                    if (params.FREIGABE == 'Ticket') {
+                        // Die Pipeline setzt das Ticket auf "awaiting_approval" und wartet,
+                        // bis ein Mensch im Ticket "approved" (oder "rejected") setzt.
+                        sh '''
+                            . .venv/bin/activate
+                            python scripts/wait_approval.py "$CHANGE_NO"
+                        '''
+                    } else {
+                        input message: "Plan geprüft? Rollout für ${params.CHANGE_NO} starten?", ok: 'Deploy'
+                    }
+                }
             }
         }
 

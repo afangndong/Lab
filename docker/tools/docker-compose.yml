@@ -13,7 +13,19 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  redmine:
+    image: redmine:6
+    container_name: lab-redmine
+    ports:
+      - "3000:3000"
+    volumes:
+      - redmine_files:/usr/src/redmine/files 
+      - redmine_db:/usr/src/redmine/sqlite
+      
+
 volumes:
   jenkins_home:
   lab_backups:
     name: lab_backups
+  redmine_files:
+  redmine_db:
