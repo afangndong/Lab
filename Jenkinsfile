@@ -28,6 +28,7 @@ pipeline {
     stages {
         stage('Tests'){
             steps {
+                script { env.STUFE = 'Tests' }
                 sh '''
                     python3 -m venv .venv
                     . .venv/bin/activate
@@ -39,6 +40,7 @@ pipeline {
 
         stage('Tor'){
             steps {
+                script { env.STUFE = 'Tor' }
                 sh '''
                     . .venv/bin/activate
                     python scripts/gate.py "$CHANGE_NO"
@@ -48,6 +50,7 @@ pipeline {
 
         stage('Plan'){
             steps {
+                script { env.STUFE = 'Plan' }
                 sh '''
                     . .venv/bin/activate
                     ansible-playbook -i ansible/inventory.yml ansible/site.yml --check --diff
@@ -57,6 +60,7 @@ pipeline {
 
         stage('Freigabe'){
             steps {
+                script { env.STUFE = 'Freigabe' }
                 script {
                     if (params.FREIGABE == 'Ticket') {
                         // Die Pipeline setzt das Ticket auf "awaiting_approval" und wartet,
@@ -74,6 +78,7 @@ pipeline {
 
         stage('Backup'){
             steps {
+                script { env.STUFE = 'Backup' }
                 sh '''
                     . .venv/bin/activate
                     ansible-playbook -i ansible/inventory.yml ansible/backup.yml -e change_no="$CHANGE_NO" -e build_no="$BUILD_NUMBER"
@@ -84,6 +89,7 @@ pipeline {
 
         stage('Rollout'){
             steps {
+                script { env.STUFE = 'Rollout' }
                 sh '''
                     . .venv/bin/activate
                     ansible-playbook -i ansible/inventory.yml ansible/site.yml
@@ -98,6 +104,7 @@ pipeline {
 
         stage('Verifikation'){
             steps {
+                script { env.STUFE = 'Verifikation' }
                 sh '''
                     . .venv/bin/activate
                     python scripts/verify.py "$CHANGE_NO"
@@ -112,6 +119,7 @@ pipeline {
 
         stage ('Abschluss'){
             steps {
+                script { env.STUFE = 'Abschluss' }
                 sh '''
                     . .venv/bin/activate
                     python scripts/ticket_cli.py note "$CHANGE_NO" "Pipeline: ausgerollt (Build $BUILD_NUMBER, $BUILD_URL)"
@@ -123,12 +131,10 @@ pipeline {
 
     post {
         failure {
-            withEnv(["FAIL_STAGE=${env.STAGE_NAME}"]) {
-                sh '''
-                    . .venv/bin/activate
-                    python scripts/ticket_cli.py note "$CHANGE_NO" "Pipeline: fehlgeschlagen in Stufe $FAIL_STAGE (Build $BUILD_NUMBER, $BUILD_URL)" || true
-                '''
-            }
+            sh '''
+                . .venv/bin/activate
+                python scripts/ticket_cli.py note "$CHANGE_NO" "Pipeline: fehlgeschlagen in Stufe ${STUFE:-unbekannt} (Build $BUILD_NUMBER, $BUILD_URL)" || true
+            '''
         }
         aborted {
             sh '''
