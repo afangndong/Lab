@@ -3,4 +3,5 @@ __pycache__/
 .pytest_cache/
 .env.local
 build/*
-!build/.gitkeepbuild/
+!build/.gitkeep
+backup/

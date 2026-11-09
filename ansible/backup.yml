@@ -1,0 +1,24 @@
+---
+- name: Laufende Konfiguration der Router sichern
+  hosts: routers
+  gather_facts: false
+  vars:
+    backup_root: "{{ lookup('env', 'BACKUP_ROOT') | default(playbook_dir ~ '/../backup', true) }}"
+    backup_dir: "{{ backup_root }}/{{ change_no }}_build{{ build_no }}"
+  tasks:
+    - name: Ordner für das Backup
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Laufende Konfiguration lesen
+      ansible.builtin.command: docker exec {{ container }} vtysh -c "show running-config"
+      register: running
+      changed_when: false
+
+    - name: Konfiguration in eine Datei schreiben
+      ansible.builtin.copy:
+        content: "{{ running.stdout_lines | reject('match', '^(Building configuration|Current configuration)') | join('\n') }}\n"
+        dest: "{{ backup_dir }}/{{ inventory_hostname }}.conf"
+        mode: "0644"

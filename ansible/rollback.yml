@@ -1,0 +1,30 @@
+---
+- name: Rollback auf die gesicherte Konfiguration
+  hosts: routers
+  gather_facts: false
+  vars:
+    backup_root: "{{ lookup('env', 'BACKUP_ROOT') | default(playbook_dir ~ '/../backup', true) }}"
+    backup_dir: "{{ backup_root }}/{{ change_no }}_build{{ build_no }}"
+  tasks:
+    - name: Backup vorhanden?
+      ansible.builtin.stat:
+        path: "{{ backup_dir }}/{{ inventory_hostname }}.conf"
+      register: backup
+      failed_when: not backup.stat.exists
+
+    - name: Gesicherte Konfiguration in den Container kopieren
+      ansible.builtin.command: >
+        docker cp {{ backup_dir }}/{{ inventory_hostname }}.conf
+        {{ container }}:/etc/frr/frr.conf
+
+    # Der Rollout hat nur Zeilen hinzugefügt. Damit das Laden des Backups den
+    # alten Zustand wirklich herstellt, wird der OSPF-Prozess zuerst entfernt.
+    - name: OSPF-Prozess entfernen
+      ansible.builtin.command: >
+        docker exec {{ container }} vtysh -c "configure terminal" -c "no router ospf"
+      failed_when: false
+
+    - name: Gesicherte Konfiguration laden
+      ansible.builtin.command: docker exec {{ container }} vtysh -f /etc/frr/frr.conf
+
+
