@@ -63,7 +63,6 @@ pipeline {
                     ansible-playbook -i ansible/inventory.yml ansible/backup.yml -e change_no="$CHANGE_NO" -e build_no="$BUILD_NUMBER"
                     python scripts/ticket_cli.py note "$CHANGE_NO" "Pipeline: Backup gesichert in lab-backups/${CHANGE_NO}_build${BUILD_NUMBER} (Build $BUILD_NUMBER)"
                 '''
-                archiveArtifacts artifacts: 'backup/**', allowEmptyArchive: false
             }
         }
 
