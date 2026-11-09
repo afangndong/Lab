@@ -26,6 +26,7 @@ def test_unknown_change_raises():
 
 
 def test_client_from_env(monkeypatch):
+    monkeypatch.delenv("TICKET_SYSTEM", raising=False)
     monkeypatch.setenv("SERVICENOW_URL", "http://example:1234")
     c = client_from_env()
     assert isinstance(c, ServiceNowClient)
