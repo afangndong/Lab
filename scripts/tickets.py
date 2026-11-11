@@ -26,6 +26,10 @@ class TicketClient(ABC):
     @abstractmethod
     def set_state(self, number: str, state: str) -> None: ...
 
+    @abstractmethod
+    def create_change(self, short_description: str, description: str = "") -> str:
+        """Legt ein neues Ticket an und gibt die Ticketnummer zurück."""
+
 
 class FakeClient(TicketClient):
     """Speichert alles im Speicher, ohne Server. Nur für Tests."""
@@ -43,6 +47,12 @@ class FakeClient(TicketClient):
 
     def set_state(self, number, state):
         self.changes[number]["state"] = state
+
+    def create_change(self, short_description, description=""):
+        number = f"INC{len(self.changes) + 1:04d}"
+        self.changes[number] = {"short_description": short_description,
+                                "description": description, "state": "new"}
+        return number
 
 
 class ServiceNowClient(TicketClient):
@@ -84,6 +94,15 @@ class ServiceNowClient(TicketClient):
         )
         r.raise_for_status()
 
+    def create_change(self, short_description, description=""):
+        r = self.session.post(
+            self.base_url + TABLE,
+            json={"short_description": short_description, "description": description},
+        )
+        r.raise_for_status()
+        return r.json()["result"]["number"]
+
+
 # Redmine kennt keine Changes. Die Namen der Redmine-Status werden auf die
 # Status der Pipeline abgebildet. Die Redmine-Status "Geplant", "Freigabe erforderlich",
 # "Freigegeben" und "Abgelehnt" legst du in der Verwaltung selbst an.
@@ -100,11 +119,12 @@ REDMINE_STATUS_MAP = {
 class RedmineClient(TicketClient):
     """Spricht mit Redmine über die REST-API. Die Ticketnummer ist die Ticket-ID (z. B. 12 oder #12)."""
 
-    def __init__(self, base_url, api_key, session=None, status_map=None):
+    def __init__(self, base_url, api_key, session=None, status_map=None, project=None):
         self.base_url = base_url.rstrip("/")
         self.session = session or requests.Session()
         self.session.headers.update({"X-Redmine-API-Key": api_key})
         self.status_map = status_map or REDMINE_STATUS_MAP
+        self.project = project          # Kennung des Projekts, nur zum Anlegen nötig
 
     @staticmethod
     def _id(number):
@@ -149,15 +169,28 @@ class RedmineClient(TicketClient):
         )
         r.raise_for_status()
 
+    def create_change(self, short_description, description=""):
+        if not self.project:
+            raise ValueError("REDMINE_PROJECT ist nicht gesetzt (Kennung des Redmine-Projekts)")
+        r = self.session.post(
+            f"{self.base_url}/issues.json",
+            json={"issue": {"project_id": self.project, "subject": short_description,
+                            "description": description}},
+        )
+        r.raise_for_status()
+        return str(r.json()["issue"]["id"])
+
 
 def client_from_env():
     """Baut den Ticket-Client aus der Umgebung.
 
-    TICKET_SYSTEM=redmine: REDMINE_URL und REDMINE_API_KEY. Sonst ServiceNow (SERVICENOW_URL).
+    TICKET_SYSTEM=redmine: REDMINE_URL, REDMINE_API_KEY und (zum Anlegen) REDMINE_PROJECT.
+    Sonst ServiceNow (SERVICENOW_URL).
     """
     if os.environ.get("TICKET_SYSTEM", "servicenow") == "redmine":
         return RedmineClient(
             os.environ.get("REDMINE_URL", "http://localhost:3000"),
             os.environ["REDMINE_API_KEY"],
+            project=os.environ.get("REDMINE_PROJECT"),
         )
     return ServiceNowClient(os.environ.get("SERVICENOW_URL", "http://localhost:8081"))

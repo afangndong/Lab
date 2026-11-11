@@ -22,6 +22,18 @@ def list_changes(sysparm_query: str = ""):
     return {"result": treffer}
 
 
+@app.post("/api/now/table/change_request", status_code=201)
+async def create_change(request: Request):
+    body = await request.json()
+    n = len(CHANGES) + 1
+    ticket = {"sys_id": f"abc{n}", "number": f"CHG{30411 + n:07d}",
+              "short_description": body.get("short_description", ""),
+              "description": body.get("description", ""),
+              "state": body.get("state", "new"), "work_notes": []}
+    CHANGES[ticket["sys_id"]] = ticket
+    return {"result": ticket}
+
+
 @app.patch("/api/now/table/change_request/{sys_id}")
 async def update_change(sys_id: str, request: Request):
     body = await request.json()

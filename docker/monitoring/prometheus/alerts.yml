@@ -1,0 +1,26 @@
+groups:
+  - name: net-lab
+    rules:
+      - alert: LabExporterDown
+        expr: up{job="net-lab"} == 0
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: "Net-Lab-Exporter nicht erreichbar"
+          description: "Prometheus kann den Exporter auf dem Host nicht abfragen."
+
+      - alert: OspfNachbarFehlt
+        expr: lab_ospf_neighbors_full < lab_ospf_neighbors_expected
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: "OSPF auf {{ $labels.router }}: Nachbarn fehlen"
+          description: "{{ $labels.router }} hat {{ $value }} Nachbarn im Zustand Full, erwartet sind mehr."
+
+      - alert: FilialeNichtErreichbar
+        expr: lab_ping_up == 0
+        for: 1m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.quelle }} erreicht {{ $labels.ziel }} nicht"
+          description: "Ping von {{ $labels.quelle }} nach {{ $labels.ziel }} schlägt seit über einer Minute fehl."

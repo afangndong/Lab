@@ -1,0 +1,25 @@
+global:
+  smtp_smarthost: "mailpit:1025"          # Lab: Test-Mailserver (Mailpit). Echt: z. B. smtp.gmail.com:587
+  smtp_from: "alertmanager@net-lab.local"
+  smtp_require_tls: false                 # bei echtem Server: true
+  # Nur für echten Server (Passwort NICHT ins Repo, siehe Hinweis):
+  # smtp_auth_username: "du@gmail.com"
+  # smtp_auth_password_file: /etc/alertmanager/smtp_password
+
+route:
+  receiver: ticket-und-mail
+  group_by: [alertname, router, quelle, ziel]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 12h
+
+receivers:
+  - name: ticket-und-mail
+    webhook_configs:
+      - url: http://host.docker.internal:9102/alert
+        send_resolved: true
+    email_configs:
+      - to: "klemen@net-lab.local"
+        send_resolved: true
+        headers:
+          subject: "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}"
