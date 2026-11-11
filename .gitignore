@@ -5,3 +5,4 @@ __pycache__/
 build/*
 !build/.gitkeep
 backup/
+docker/monitoring/alertmanager/smtp_password
